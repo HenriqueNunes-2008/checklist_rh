@@ -7,11 +7,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from pdf_generator import criar_pdf_buffer
 
 app = Flask(__name__)
-app.secret_key = "Senha123"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "uma-chave-padrao-segura")
 
 # Configurações do Supabase
-URL_SUPABASE = "https://ylhsdhmotcqwfxqsmubn.supabase.co"
-CHAVE_SUPABASE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsaHNkaG1vdGNxd2Z4cXNtdWJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMzIwOTIsImV4cCI6MjA5MTgwODA5Mn0.JOPo8mYVDUu2740rL4Xs1381cIhETo9XGTvweS_J2xQ"
+URL_SUPABASE = os.environ.get("SUPABASE_URL")
+CHAVE_SUPABASE = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(URL_SUPABASE, CHAVE_SUPABASE)
 
 # --- ROTAS DE AUTENTICAÇÃO ---
