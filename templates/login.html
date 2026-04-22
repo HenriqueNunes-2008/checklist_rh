@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2 style="text-align:center; color: #1e3a8a;">Acesso Restrito</h2>
+    <form action="/auth/login" method="POST">
+        <input type="email" name="email" placeholder="E-mail" required>
+        <input type="password" name="senha" placeholder="Senha" required>
+        <button type="submit" style="margin-top: 10px;">ENTRAR</button>
+    </form>
+    <p style="text-align:center; margin-top:15px;">
+        Novo por aqui? <a href="/cadastro" style="color: #5b2fa6; font-weight:bold;">Cadastre-se</a>
+    </p>
+</div>
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="dados-checklist" data-modelos='{{ itens_master | tojson | safe }}' style="display: none;"></div>
+
+<div class="dashboard-layout">
+    
+    <aside class="sidebar-models">
+        <h3><i class="icon">📁</i> Modelos Salvos</h3>
+        
+        <div class="model-group">
+            <h4>Modelos Admissão</h4>
+            <ul id="lista-agrupada-admissao">
+                </ul>
+        </div>
+
+        <div class="model-group" style="margin-top: 20px;">
+            <h4>Modelos Desligamento</h4>
+            <ul id="lista-agrupada-desligamento">
+                </ul>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+        <h3><i class="icon">👤</i> Funcionários</h3>
+        <ul class="lista-simples">
+            {% for f in funcionarios %}
+            <li class="func-item-sidebar">
+                <a href="{{ url_for('tela_validacao', id_funcionario=f.id) }}">
+                    <strong>{{ f.nome.split(' ')[0] }}</strong> <span style="font-size: 10px;">({{ f.cpf }})</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+
+    <div class="main-content">
+        <div class="main-sections-wrapper" style="background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0;">
+            <h2 style="color: #1e3a8a; margin-top: 0; margin-bottom: 25px;">Painel RH</h2>
+
+            <section class="admin-section">
+                <h3><i class="icon">👤</i> Novo Funcionário</h3>
+                <form action="/cadastrar_funcionario" method="POST" class="form-stack">
+                    <div class="input-group-row">
+                        <div style="flex: 2; min-width: 200px;">
+                            <label class="field-label">Nome</label>
+                            <input type="text" name="nome" placeholder="Nome Completo" required>
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label class="field-label">CPF</label>
+                            <input type="text" name="cpf" placeholder="CPF" required>
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label class="field-label">Data de Admissão</label>
+                            <input type="date" name="data_admissao" required>
+                        </div>
+                    </div>
+                    <div class="input-group-row">
+                        <select name="modelo_checklist" required style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            <option value="" disabled selected>Selecione o Modelo de Admissão...</option>
+                            {% for modelo in modelos_admissao %}
+                            <option value="{{ modelo }}">{{ modelo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary-full">CADASTRAR FUNCIONÁRIO</button>
+                    <small style="display:block; margin-top:5px; color:#64748b">* Crie modelos na seção abaixo antes de cadastrar novos funcionários.</small>
+                </form>
+            </section>
+
+            <section class="admin-section" style="margin-top: 25px;">
+                <h3><i class="icon">⚙️</i> Configurar Checklist Padrão</h3>
+                <form action="/cadastrar_item_checklist_massa" method="POST" id="form-checklist" class="form-stack">
+                    <div class="header-inputs">
+                        <div style="flex: 4;">
+                            <label>Nome do Checklist:</label>
+                            <input type="text" name="nome_checklist" id="input-nome-checklist" placeholder="Ex: Checklist Admissão Padrão" required style="width: 100%; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label>Tipo:</label>
+                            <select name="tipo_global" id="select-tipo-global" style="width: 100%; box-sizing: border-box;">
+                                <option value="admissao">Admissão</option>
+                                <option value="desligamento">Desligamento</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="container-itens" style="margin-top: 20px;">
+                        <div class="item-input-row">
+                            <input type="text" name="descricao[]" placeholder="Descrição do item" required style="flex: 1;">
+                            <button type="button" class="btn-remove" onclick="removerLinha(this)">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions" style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button type="button" class="btn-add-line" onclick="adicionarLinha()" style="flex: 1;">+ Adicionar Item</button>
+                        <button type="submit" class="btn-save-all" style="flex: 1;">SALVAR MODELO</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="admin-section" style="margin-top: 25px;">
+                <h3><i class="icon">📋</i> Processos em Aberto</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table-dashboard">
+                        <thead>
+                            <tr><th>Funcionário</th><th>Status</th><th style="text-align: right;">Gerenciamento</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for f in funcionarios %}
+                            <tr>
+                                <td><strong>{{ f.nome }}</strong><br><small>{{ f.cpf }}</small></td>
+                                <td>
+                                    {% if f.status == 'Finalizado' %}
+                                        <span class="badge-status finalized">FINALIZADO</span>
+                                    {% elif f.foi_desligado %}
+                                        <span class="badge-status warning">DESLIGAMENTO</span>
+                                    {% else %}
+                                        <span class="badge-status success">ADMISSÃO</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right; display: flex; gap: 5px; justify-content: flex-end;">
+                                    <a href="{{ url_for('tela_validacao', id_funcionario=f.id) }}" class="btn-small">{{ 'Visualizar' if f.status == 'Finalizado' else 'Validar' }}</a>
+                                    <a href="{{ url_for('gerar_pdf', id_funcionario=f.id, tipo='admissao') }}" class="btn-small btn-pdf">PDF ADM</a>
+                                    
+                                    {% if f.foi_desligado %}
+                                    <a href="{{ url_for('gerar_pdf', id_funcionario=f.id, tipo='desligamento') }}" class="btn-small btn-pdf">PDF DESL</a>
+                                    {% endif %}
+                                    
+                                    {% if f.status != 'Finalizado' %}
+                                        {% if not f.foi_desligado %}
+                                        <form action="/iniciar_desligamento/{{ f.id }}" method="POST" style="display:inline;">
+                                            <select name="modelo_desligamento" required class="select-micro" onchange="if(this.value) this.form.submit()">
+                                                <option value="">+ Desligamento</option>
+                                                {% for mod in modelos_desligamento %}
+                                                <option value="{{ mod }}">{{ mod }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </form>
+                                        {% endif %}
+                                        <a href="/encerrar_processo/{{ f.id }}" class="btn-small btn-finish" onclick="return confirm('Deseja encerrar este processo? Isso bloqueará todas as edições.')">Encerrar</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dadosBrutos = document.getElementById('dados-checklist').getAttribute('data-modelos');
+    const itensMaster = JSON.parse(dadosBrutos);
+
+    // 1. Agrupar itens por Nome para exibir na Sidebar
+    function renderizarSidebar() {
+        const checklists = {};
+        itensMaster.forEach(item => {
+            const nome = item.nome_checklist || "Sem Nome";
+            if (!checklists[nome]) checklists[nome] = { tipo: item.tipo, itens: [] };
+            checklists[nome].itens.push(item);
+        });
+
+        const listaAdmissao = document.getElementById('lista-agrupada-admissao');
+        const listaDesligamento = document.getElementById('lista-agrupada-desligamento');
+        
+        listaAdmissao.innerHTML = '';
+        listaDesligamento.innerHTML = '';
+
+        Object.keys(checklists).forEach(nome => {
+            const li = document.createElement('li');
+            li.className = 'func-item-sidebar';
+            li.innerHTML = `<a href="#" onclick="carregarChecklistNoCentro('${nome}')">${nome}</a>`;
+            
+            if (checklists[nome].tipo === 'admissao') listaAdmissao.appendChild(li);
+            else listaDesligamento.appendChild(li);
+        });
+    }
+
+    // 2. Carregar o Checklist clicado na Div do Centro
+    function carregarChecklistNoCentro(nome) {
+        const filtrados = itensMaster.filter(item => item.nome_checklist === nome);
+        if (filtrados.length === 0) return;
+
+        document.getElementById('input-nome-checklist').value = nome;
+        document.getElementById('select-tipo-global').value = filtrados[0].tipo;
+
+        const container = document.getElementById('container-itens');
+        container.innerHTML = ''; // Limpa o formulário antes de carregar o modelo
+
+        filtrados.forEach(item => {
+            adicionarLinha(item.descricao);
+        });
+    }
+
+    function adicionarLinha(valor = '') {
+        const container = document.getElementById('container-itens');
+        const div = document.createElement('div');
+        div.className = 'item-input-row';
+        div.innerHTML = `
+            <input type="text" name="descricao[]" value="${valor}" placeholder="Descrição do item" required>
+            <button type="button" class="btn-remove" onclick="removerLinha(this)">✕</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function removerLinha(btn) {
+        if (document.querySelectorAll('.item-input-row').length > 1) {
+            btn.parentElement.remove();
+        }
+    }
+
+    // Iniciar a sidebar
+    renderizarSidebar();
+</script>
+
+<style>
+    .dashboard-layout { display: flex; gap: 20px; width: 95%; max-width: 1400px; margin: 20px auto; }
+    .sidebar-models { width: 260px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); height: fit-content; }
+    .main-content { flex: 1; min-width: 0; } /* min-width: 0 evita quebras de flexbox */
+    .main-sections-wrapper { box-sizing: border-box; width: 100%; }
+    .input-group-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .input-group-row input { box-sizing: border-box; }
+    .field-label { display: block; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: #64748b; }
+    .form-stack input { width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    .form-stack select { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; }
+    .header-inputs { display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end; }
+    .header-inputs label { display: block; margin-bottom: 5px; font-size: 12px; font-weight: bold; color: #64748b; }
+    .admin-section { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .item-input-row { display: flex; gap: 10px; margin-bottom: 8px; }
+    .item-input-row input { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; }
+    .btn-remove { background: #fee2e2; color: #ef4444; border: none; border-radius: 8px; width: 32px; height: 40px; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+    .btn-save-all { background: #5b2fa6; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; }
+    .btn-add-line { background: #f1f5f9; color: #1e3a8a; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-bottom: 8px; }
+    .func-item-sidebar { list-style: none; padding: 8px; background: #f8fafc; margin-bottom: 5px; border-radius: 6px; }
+    .func-item-sidebar a { text-decoration: none; color: #1e3a8a; font-size: 13px; font-weight: 500; display: block; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px; background: #f8fafc; }
+    td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+    .btn-pdf { background: #ef4444 !important; }
+    .btn-small { padding: 6px 12px; border-radius: 6px; text-decoration: none; color: white; font-weight: bold; font-size: 11px; background: #5b2fa6; transition: 0.2s; }
+    .btn-small:hover { opacity: 0.8; }
+    .btn-finish { background: #1e293b !important; }
+    .badge-status { font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+    .badge-status.finalized { background: #e2e8f0; color: #475569; }
+    .badge-status.success { background: #dcfce7; color: #166534; }
+    .badge-status.warning { background: #fef9c3; color: #854d0e; }
+    .select-micro { font-size: 10px; padding: 4px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer; }
+</style>
+{% endblock %}

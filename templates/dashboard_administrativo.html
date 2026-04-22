@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card-wide">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: #1e3a8a; margin: 0;">Painel de Validação - Administrativo</h2>
+        <div style="text-align: right;">
+            <p style="margin: 0;">Bem-vindo, <strong>{{ nome }}</strong></p>
+            <small style="color: #64748b;">Setor de Operações Administrativas</small>
+        </div>
+    </div>
+
+    <hr style="margin-bottom: 30px; border: 0; border-top: 1px solid #f1f5f9;">
+
+    <div class="admin-section">
+        <h3 style="margin-bottom: 20px;"><i class="icon">📋</i> Checklists Pendentes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Funcionário</th>
+                    <th>CPF</th>
+                    <th>Data de Admissão</th>
+                    <th style="text-align: right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in funcionarios %}
+                <tr>
+                    <td><strong>{{ f.nome }}</strong></td>
+                    <td>{{ f.cpf }}</td>
+                    <td>{{ f.data_admissao }}</td>
+                    <td style="text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+                        <a href="/validar/{{ f.id }}" class="btn-small">Validar Itens</a>
+                        <a href="{{ url_for('gerar_pdf', id_funcionario=f.id, tipo='admissao') }}" class="btn-small btn-pdf">PDF ADM</a>
+                        
+                        {% if f.foi_desligado %}
+                        <a href="{{ url_for('gerar_pdf', id_funcionario=f.id, tipo='desligamento') }}" class="btn-small btn-pdf">PDF DESL</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
+                        Nenhum processo em aberto para validação.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .admin-section { background: white; padding: 10px; border-radius: 15px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; }
+    .btn-small { padding: 8px 16px; background: #5b2fa6; color: white; text-decoration: none; border-radius: 8px; font-size: 12px; font-weight: bold; transition: 0.2s; }
+    .btn-small:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-pdf { background: #ef4444 !important; }
+</style>
+{% endblock %}

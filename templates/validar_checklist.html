@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card-wide">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color: #1e3a8a; margin: 0;">Checklist de Controle</h2>
+        <div>
+            {% if funcionario.status == 'Finalizado' %}
+            <span class="badge-finalizado">✅ PROCESSO FINALIZADO</span>
+            {% endif %}
+            <span class="badge-func">{{ funcionario.nome }} | CPF: {{ funcionario.cpf }}</span>
+        </div>
+    </div>
+
+    <form action="/salvar_checklist/{{ funcionario.id }}" method="POST" style="margin-top: 30px;">
+        <div class="checklist-section">
+            <h3 class="section-title">📦 Itens de Admissão</h3>
+            <div class="checklist-grid">
+                {% for item in checklists if item.checklist_modelos.tipo == 'admissao' %}
+                <div class="item-row">
+                    <span class="item-desc">{{ item.checklist_modelos.descricao }}</span>
+                    <div class="item-actions">
+                        <label class="check-container">
+                            RH
+                            <input type="checkbox" name="item_{{ item.id }}_rh" class="custom-check" 
+                                   {% if item.validado_rh %}checked{% endif %} 
+                                   {% if session['user_role']|upper != 'RH' or funcionario.status == 'Finalizado' %}disabled{% endif %}>
+                        </label>
+                        
+                        <label class="check-container">
+                            Administrativo
+                            <input type="checkbox" name="item_{{ item.id }}_adm" class="custom-check" 
+                                   {% if item.validado_executivo %}checked{% endif %}
+                                   {% if (session['user_role']|upper != 'RH' and session['user_role']|upper != 'ADMINISTRATIVO' and session['user_role']|upper != 'EXECUTIVO') or funcionario.status == 'Finalizado' %}disabled{% endif %}>
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if checklists | selectattr('checklist_modelos.tipo', 'equalto', 'desligamento') | list | length > 0 %}
+        <div class="checklist-section" style="margin-top: 20px;">
+            <h3 class="section-title" style="color: #ef4444; border-color: #fee2e2;">📑 Itens de Desligamento</h3>
+            <div class="checklist-grid">
+                {% for item in checklists if item.checklist_modelos.tipo == 'desligamento' %}
+                <div class="item-row">
+                    <span class="item-desc">{{ item.checklist_modelos.descricao }}</span>
+                    <div class="item-actions">
+                        <label class="check-container">
+                            RH
+                            <input type="checkbox" name="item_{{ item.id }}_rh" class="custom-check"
+                                   {% if item.validado_rh %}checked{% endif %} 
+                                   {% if session['user_role']|upper != 'RH' or funcionario.status == 'Finalizado' %}disabled{% endif %}>
+                        </label>
+                        
+                        <label class="check-container">
+                            Administrativo
+                            <input type="checkbox" name="item_{{ item.id }}_adm" class="custom-check"
+                                   {% if item.validado_executivo %}checked{% endif %} 
+                                   {% if (session['user_role']|upper != 'RH' and session['user_role']|upper != 'ADMINISTRATIVO' and session['user_role']|upper != 'EXECUTIVO') or funcionario.status == 'Finalizado' %}disabled{% endif %}>
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if funcionario.status != 'Finalizado' %}
+        <button type="submit" class="btn-save">💾 SALVAR VALIDAÇÕES</button>
+        {% endif %}
+        <a href="/dashboard" class="btn-back">VOLTAR AO PAINEL</a>
+    </form>
+</div>
+
+<style>
+    .badge-finalizado { background: #16a34a; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; margin-right: 10px; font-size: 13px; }
+    .badge-func { background: #f1f5f9; padding: 8px 15px; border-radius: 20px; font-weight: 600; color: #5b2fa6; border: 1px solid #e2e8f0; }
+    .checklist-section { background: #f8fafc; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #f1f5f9; }
+    .section-title { color: #0093dd; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0; font-size: 1.1em; }
+    .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: white; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; }
+    .item-desc { font-weight: 500; color: #334155; }
+    .item-actions { display: flex; gap: 25px; }
+    .check-container { font-size: 11px; font-weight: 800; color: #64748b !important; display: flex; align-items: center; gap: 8px; text-transform: uppercase; cursor: pointer; }
+    
+    /* Estilo dos checkboxes quando desabilitados */
+    input[type="checkbox"]:disabled { cursor: not-allowed; opacity: 0.6; }
+
+    /* Estilo base para todos os checkboxes */
+    .custom-check {
+        width: 20px !important;
+        height: 20px !important;
+        cursor: pointer;
+        appearance: none; /* Remove o estilo padrão do sistema */
+        -webkit-appearance: none;
+        border: 2px solid #cbd5e1;
+        border-radius: 4px;
+        background-color: #fff;
+        display: grid;
+        place-content: center;
+        transition: all 0.2s;
+    }
+
+    /* Forçar o verde quando marcado */
+    .custom-check:checked {
+        background-color: #16a34a !important;
+        border-color: #16a34a !important;
+    }
+
+    /* O "V" branco dentro do quadrado */
+    .custom-check:checked::before {
+        content: "✔";
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    /* Quando desabilitado, fica cinza */
+    .custom-check:disabled {
+        background-color: #f1f5f9;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .btn-save { 
+        background: #16a34a; 
+        color: white; 
+        border: none; 
+        padding: 12px 25px; 
+        border-radius: 10px; 
+        font-weight: bold; 
+        cursor: pointer; 
+        width: 100%; 
+        transition: 0.3s;
+    }
+    .btn-save:hover { background: #15803d; transform: translateY(-2px); }
+    .btn-back { display: block; text-align: center; margin-top: 15px; color: #64748b; text-decoration: none; font-size: 14px; font-weight: 500; }
+    .btn-back:hover { color: #1e3a8a; }
+</style>
+{% endblock %}

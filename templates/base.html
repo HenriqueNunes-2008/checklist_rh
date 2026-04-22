@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Sistema Checklist - Kure</title>
+</head>
+<body>
+    <div class="topbar">
+        <div class="topbar-content">
+            <img src="/static/LogoFlexcolor2.png" class="logo-fixed" alt="Logo">
+            <div class="header-info">
+                <div class="address">
+                    R. José Antônio Valadares, 285 – Vila Liviero<br>
+                    São Paulo – SP. CEP: 04185-020
+                </div>
+                <div class="contact">
+                    <span class="email">comercial@soukure.com.br</span><br>
+                    <span class="phone">(11) 2372-7444</span>
+                </div>
+                {% if session['user_id'] %}
+                <a href="/logout" class="logout-link">SAIR</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
