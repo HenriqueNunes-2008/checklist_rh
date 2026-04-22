@@ -1,0 +1,5 @@
+flask
+supabase
+werkzeug
+reportlab
+gunicorn
