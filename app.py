@@ -10,8 +10,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "uma-chave-padrao-segura")
 
 # Configurações do Supabase
-URL_SUPABASE = os.environ.get("SUPABASE_URL")
-CHAVE_SUPABASE = os.environ.get("SUPABASE_KEY")
+URL_SUPABASE = os.environ.get("SUPABASE_URL", "")
+CHAVE_SUPABASE = os.environ.get("SUPABASE_KEY", "")
 supabase: Client = create_client(URL_SUPABASE, CHAVE_SUPABASE)
 
 # --- ROTAS DE AUTENTICAÇÃO ---
